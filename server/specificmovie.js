@@ -8,8 +8,7 @@ const client = new MongoClient(uri, { useNewUrlParser:true, useUnifiedTopology: 
 module.exports = async movie => {
     try {
         await client.connect();
-        const specific = await client.db("IMdb").collection("DenzelMovies").findOne({movie});
-        console.log(specific);
+        const specific = await client.db("IMdb").collection("DenzelMovies").findOne({id:movie});
         return specific
     } catch (e) {
         console.error(e);

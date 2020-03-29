@@ -6,3 +6,26 @@ const uri = "mongodb://CRohart:capu@cluster0-shard-00-00-lygtr.mongodb.net:27017
 const client = new MongoClient(uri, { useNewUrlParser:true, useUnifiedTopology: true });
 
 
+module.exports = async (metascore, limit) => {
+    try {
+        await client.connect();
+        const movies = await client.db("IMdb").collection("DenzelMovies")
+        .find({metascore:{ $gte: metascore }})
+        .sort({ metascore: -1 })
+        .toArray();
+        console.log(movies.length);
+        if(movies.length>=limit) {
+        	result=[];
+        	for (let i = 0; i < limit; i++) {
+        		result[i]=movies[i];
+				}
+			return [movies.length, result]
+		}
+		else
+			return [movies.length, movies]
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
+};
