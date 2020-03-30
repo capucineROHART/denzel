@@ -77,7 +77,8 @@ async function createListing(movies){
     console.log(result.insertedIds);
 }
 
-module.exports = async actor => {
+//Function for FIRST Endpoint
+module.exports.populate = async actor => {
 	const limit = pLimit(P_LIMIT);
   	const filmography = await getFilmography(actor);
 
@@ -95,4 +96,74 @@ module.exports = async actor => {
   	const movies= [].concat.apply([], isFulfilled);
   	const populate = await populateDatabase(movies);
   	return movies;
+};
+
+//Function for SECOND Endpoint
+module.exports.mustwatch = async () => {
+    try {
+        await client.connect();
+        const movies = await client.db("IMdb").collection("DenzelMovies").find().toArray();
+        const awesome = movies.filter(movie => movie.metascore >= 70);
+        if (awesome.length > 0){
+            return awesome[Math.floor(Math.random()*awesome.length)];}
+        else 
+            console.log("No awesome movie found with a metascore over 70 !");
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
+};
+
+//Function for THIRD Endpoint
+module.exports.specificmovie = async movie => {
+    try {
+        await client.connect();
+        const specific = await client.db("IMdb").collection("DenzelMovies").findOne({id:movie});
+        return specific
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
+};
+
+//Function for FOURTH Endpoint
+module.exports.searchmovie = async (metascore, limit) => {
+    try {
+        await client.connect();
+        const movies = await client.db("IMdb").collection("DenzelMovies")
+        .find({metascore:{ $gte: metascore }})
+        .sort({ metascore: -1 })
+        .toArray();
+        console.log(movies.length);
+        if(movies.length>=limit) {
+        	result=[];
+        	for (let i = 0; i < limit; i++) {
+        		result[i]=movies[i];
+				}
+			return [movies.length, result]
+		}
+		else
+			return [movies.length, movies]
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
+};
+
+//Function for FIFTH Endpoint
+module.exports.savedateandreview = async (movie, date, review) => {
+    try {
+        await client.connect();
+        const newmovie = await client.db("IMdb").collection("DenzelMovies")
+		.findOneAndUpdate({movie}, {$push: {date: date, review: review} }, {returnNewDocument: true });
+        const modified_movie = await client.db("IMdb").collection("DenzelMovies").findOne({id:movie});
+        return modified_movie
+    } catch (e) {
+        console.error(e);
+    } finally {
+        await client.close();
+    }
 };

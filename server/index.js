@@ -3,10 +3,6 @@ const express = require('express');
 const helmet = require('helmet');
 const {PORT} = require('./constants');
 const imdb = require("./imdb");
-const mustwatch = require("./mustwatch");
-const specificmovie = require("./specificmovie");
-const searchmovie = require("./searchmovie");
-const savedateandreview = require("./savedateandreview");
 
 const app = express();
 
@@ -26,13 +22,13 @@ app.get("/", (request, response) => {
 //FIRST Endpoint: Populate the database
 app.get("/movies/populate/:id", async (request, response) => {
 	const actor_id = request.params.id;
-	const populate_movies = await imdb(actor_id);
+	const populate_movies = await imdb.populate(actor_id);
 	response.send({ total: populate_movies.length });
 });
 
 //SECOND Endpoint: Fetch a random must-watch movie
 app.get("/movies", async (request, response) => {
-	const mustWatch_movie = await mustwatch();
+	const mustWatch_movie = await imdb.mustwatch();
     response.send(mustWatch_movie);
 });
 
@@ -44,14 +40,14 @@ app.get("/movies/search", async (request, response) => {
 		metascore=0;
 	if(!limit)
 		limit=5;
-	const movies = await searchmovie(metascore, limit);
+	const movies = await imdb.searchmovie(metascore, limit);
 	response.send({ limit: limit, total: movies[0], results: movies[1] });
 });
 
 //THIRD Endpoint: Fetch a specific movie
 app.get("/movies/:id", async (request, response) => {
 	const movie_id = request.params.id;
-	const specific = await specificmovie(movie_id);
+	const specific = await imdb.specificmovie(movie_id);
 	response.send(specific);
 });
 
@@ -59,7 +55,9 @@ app.get("/movies/:id", async (request, response) => {
 app.post("/movies/:id", async (request, response) => {
 	const movie_id = request.params.id;
 	const {date, review} = request.body;
-	const movie = await savedateandreview(movie_id, date, review);
+	if(! {date, review})
+		response.send("You need to specify a date and a review!");
+	const movie = await imdb.savedateandreview(movie_id, date, review);
 	console.log(movie);
 	response.send({ _id: movie._id });
 });
