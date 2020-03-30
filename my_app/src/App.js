@@ -2,10 +2,6 @@ import React from 'react';
 import './App.css';
 
 import axios from 'axios'
-handleClick() {
-  axios.get('http://localhost:9292/movies')
-  .then(response => console.log(response))
-}
 
 
 function App() {
